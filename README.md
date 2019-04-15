@@ -19,7 +19,7 @@ This API is able to run games of ten pin bowling.
   "score":""
 }
 ```
-* `PUT /games/6?ball_score=8` will update game `6` to say that 8 pins were knocked down with the most recent ball. It returns the player's current score for all frames in the game thus far.
+* `PUT /games/6?ball_score=8` will update game `6` to say that the next ball knocked 8 pins down. It returns the player's current score for all frames in the game thus far.
 ```
 {"new_score":"8\n"}
 ```
