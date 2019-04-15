@@ -37,9 +37,9 @@ class Player < ApplicationRecord
       if frame.sum < 10
         result += frame.sum
       elsif frame[0] < 10 # spare
-        result += 10 + parsed_score[i+1][0]
+        result += 10 + (parsed_score[i..-1].flatten[2] || 0)
       else # strike
-        result += 10 + parsed_score[i+1..-1].flatten[0..1].sum
+        result += 10 + (parsed_score[i..-1].flatten[1..2]&.sum || 0)
       end
     end
     result

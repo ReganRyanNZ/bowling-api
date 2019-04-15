@@ -22,15 +22,29 @@ RSpec.describe 'Players API', type: :request do
     end
 
     context 'when the request is invalid' do
-      before { post "/games/#{game.id}/players", params: { player: { name: '' } } }
+      context 'with empty name' do
+        before { post "/games/#{game.id}/players", params: { player: { name: '' } } }
 
-      it 'returns status code 422' do
-        expect(response).to have_http_status(422)
+        it 'returns status code 422' do
+          expect(response).to have_http_status(422)
+        end
+
+        it 'returns a validation failure message' do
+          expect(response.body)
+            .to match(/Validation failed: Name can't be blank/)
+        end
       end
+      context 'with no name parameter' do
+        before { post "/games/#{game.id}/players", params: {} }
 
-      it 'returns a validation failure message' do
-        expect(response.body)
-          .to match(/Validation failed: Name can't be blank/)
+        it 'returns status code 400' do
+          expect(response).to have_http_status(400)
+        end
+
+        it 'returns a validation failure message' do
+          expect(response.body)
+            .to match("Error: Player name not found. Syntax is games/:game_id/players?player[name]=example")
+        end
       end
     end
   end

@@ -85,6 +85,35 @@ RSpec.describe 'Games API', type: :request do
         expect(player_one.reload.parsed_score).to eq([[4]])
       end
     end
+
+    context 'at the end of a players turn' do
+      let(:game) { create(:game) }
+      let(:score_one) { "4,5\n2,1\n0,10\n1,1\n6,0\n" }
+      let(:score_two) { "0,10\n10\n5,2\n10\n2\n" }
+      let!(:player_one) { create(:player, name: "Harry Potter", game: game, score: score_one) }
+      let!(:player_two) { create(:player, name: "Nick Fury", game: game, score: score_two) }
+      before do
+        game.update(current_turn: player_two.id, current_frame: 4)
+        put "/games/#{game.id}", params: { ball_score: 4 }
+      end
+
+      it 'adds the score to the player' do
+        expect(player_two.reload.score).to eq("0,10\n10\n5,2\n10\n2,4\n")
+      end
+      it 'updates the current turn' do
+        expect(game.reload.current_turn).to eq(player_one.id)
+      end
+      it 'updates the current frame' do
+        expect(game.reload.current_frame).to eq(5)
+      end
+      it 'returns status code 200' do
+        expect(response).to have_http_status(200)
+      end
+      it 'returns the players new score' do
+        expect(JSON.parse(response.body)).to include_json(new_score: "0,10\n10\n5,2\n10\n2,4\n")
+      end
+    end
+
   end
 
   # Get game's score

@@ -6,9 +6,9 @@ class GamesController < ApplicationController
   def create
     @game = Game.new()
     if @game.save
-      render json: @game.id, status: :created
+      render json: {game_id: @game.id}, status: :created
     else
-      render json: @game, status: 500
+      render json: "Error: Something went wrong", status: 500
     end
   end
 
@@ -19,7 +19,7 @@ class GamesController < ApplicationController
     player = Player.find(@game.current_turn)
     player.add_score(frame: @game.current_frame, new_score: params[:ball_score].to_i)
     @game.next_turn if player.turn_complete?(@game.current_frame)
-    render json: {}, status: :ok
+    render json: {new_score: player.score}, status: :ok
   end
 
   def total_score
