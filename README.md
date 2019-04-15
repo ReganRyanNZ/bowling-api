@@ -21,9 +21,13 @@ This API is able to run games of ten pin bowling.
 ```
 * `PUT /games/6?ball_score=8` will update game `6` to say that the next ball knocked 8 pins down. It returns the player's current score for all frames in the game thus far.
 ```
-{"new_score":"8\n"}
+{"new_score":"5,4\n8\n"}
 ```
 * `GET /games/6` will return the current scores for each player, their total score, whether the game is complete, and the current frame and turn for the next player to bowl. This is in human-readable format, so the player is referenced by name, and the frame number is referenced on a 1-10 scale.
 ```
-{"scores":{"Batman":{"frames":"5,4\n6\n","total":22}},"current_turn":"Batman","current_frame":2,"game_complete":false}
+{"scores":{"Batman":{"frames":"5,4\n8\n","total":17}},"current_turn":"Batman","current_frame":2,"game_complete":false}
 ```
+
+## Notes
+
+- Scores are in CSV format, with 1 row == 1 bowling frame.
