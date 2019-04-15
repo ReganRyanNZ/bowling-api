@@ -43,7 +43,7 @@ RSpec.describe 'Games API', type: :request do
   #   end
   # end
 
-
+  # Creating a new game
   describe 'POST /games' do
 
     context 'when the request is valid' do
@@ -60,6 +60,7 @@ RSpec.describe 'Games API', type: :request do
     end
   end
 
+  # Adding a ball's score
   describe 'PUT /games/:id' do
     context 'if there are no players' do
       let(:game) { create(:game) }
@@ -86,29 +87,75 @@ RSpec.describe 'Games API', type: :request do
     end
   end
 
-  # # Test suite for PUT /todos/:id
-  # describe 'PUT /todos/:id' do
-  #   let(:valid_attributes) { { title: 'Shopping' } }
+  # Get game's score
+  describe 'GET /games/:id' do
+    context 'with players' do
+      context 'halfway through a game' do
+        let(:game) { create(:game) }
+        let(:score_one) { "4,5\n2,1\n0,10\n1,1\n" }
+        let(:score_two) { "0,10\n10\n5,2\n10" }
+        let!(:player_one) { create(:player, name: "Harry Potter", game: game, score: score_one) }
+        let!(:player_two) { create(:player, name: "Nick Fury", game: game, score: score_two) }
+        before do
+          game.update(current_turn: player_two.id, current_frame: 3)
+          get "/games/#{game.id}"
+        end
+        subject { JSON.parse(response.body) }
 
-  #   context 'when the record exists' do
-  #     before { put "/todos/#{todo_id}", params: valid_attributes }
+        it 'returns scores for each player' do
+          expect(subject).to include_json(
+            scores: {
+              player_one.name => { frames: score_one, total: 25 },
+              player_two.name => { frames: score_two, total: 54 }
+            }
+          )
+        end
+        it 'returns the name of the player whose turn it is' do
+          expect(subject).to include_json(current_turn: player_two.name)
+        end
+        it 'returns current frame in a human (1-10) format (instead of 0-9)' do
+          expect(subject).to include_json(current_frame: 4)
+        end
+        it 'returns the game complete status' do
+          expect(subject).to include_json(game_complete: false)
+        end
+      end
 
-  #     it 'updates the record' do
-  #       expect(response.body).to be_empty
-  #     end
+      context 'at the start of a game' do
+        let(:game) { create(:game) }
+        let!(:player_one) { create(:player, name: "Harry Potter", game: game) }
+        let!(:player_two) { create(:player, name: "Nick Fury", game: game) }
+        before do
+          game.update(current_turn: player_one.id, current_frame: 0)
+          get "/games/#{game.id}"
+        end
+        subject { JSON.parse(response.body) }
 
-  #     it 'returns status code 204' do
-  #       expect(response).to have_http_status(204)
-  #     end
-  #   end
-  # end
-
-  # # Test suite for DELETE /todos/:id
-  # describe 'DELETE /todos/:id' do
-  #   before { delete "/todos/#{todo_id}" }
-
-  #   it 'returns status code 204' do
-  #     expect(response).to have_http_status(204)
-  #   end
-  # end
+        it 'returns empty scores for each player' do
+          expect(subject).to include_json(
+            scores: {
+              player_one.name =>  { frames: '', total: 0 },
+              player_two.name =>  { frames: '', total: 0 }
+            }
+          )
+        end
+        it 'returns the name of the player whose turn it is' do
+          expect(subject).to include_json(current_turn: player_one.name)
+        end
+        it 'returns current frame in a human (1-10) format (instead of 0-9)' do
+          expect(subject).to include_json(current_frame: 1)
+        end
+        it 'returns the game complete status' do
+          expect(subject).to include_json(game_complete: false)
+        end
+      end
+    end
+    context 'with no players' do
+      let(:game) { create(:game) }
+      before { get "/games/#{game.id}" }
+      it 'returns a message saying players are needed' do
+        expect(response.body).to match(/Game has no players/)
+      end
+    end
+  end
 end
